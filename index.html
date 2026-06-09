@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive 1040 Tax Filing Calculator</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #0d9488;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --border: #cbd5e1;
+            --accent-green: #15803d;
+            --accent-red: #b91c1c;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 90e0px) {
+            .container {
+                grid-template-columns: 7fr 5fr;
+            }
+        }
+
+        header {
+            grid-column: 1 / -1;
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        h1 { margin: 0; font-size: 1.8rem; }
+        h2 { font-size: 1.2rem; margin-top: 0; border-bottom: 2px solid var(--border); padding-bottom: 5px; color: var(--primary); }
+
+        .form-section {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            max-width: 65%;
+        }
+
+        input[type="number"], select {
+            width: 30%;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        .output-panel {
+            position: sticky;
+            top: 20px;
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 25px;
+            border-radius: 8px;
+            height: fit-content;
+        }
+
+        .output-panel h2 {
+            color: #f1f5f9;
+            border-color: #475569;
+        }
+
+        .row-metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #334155;
+            font-size: 1rem;
+        }
+
+        .row-metric.total {
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-top: 2px solid #475569;
+            border-bottom: none;
+            margin-top: 15px;
+            padding-top: 15px;
+        }
+
+        .status-refund { color: #4ade80; }
+        .status-owed { color: #f87171; }
+        
+        .info-note {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: -8px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Interactive 1040 Tax Return Engine</h1>
+        <p>Omni-form integrated simulation tool</p>
+    </header>
+
+    <div id="inputs-panel">
+        
+        <div class="form-section">
+            <h2>Form 1040 Basics & Filing Status</h2>
+            <div class="form-group">
+                <label for="filingStatus">Filing Status</label>
+                <select id="filingStatus" onchange="calculateTax()">
+                    <option value="Single">Single</option>
+                    <option value="MFJ">Married Filing Jointly</option>
+                    <option value="MFS">Married Filing Separately</option>
+                    <option value="HoH">Head of Household</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="is65Plus">Age 65 or older?</label>
+                <select id="is65Plus" onchange="calculateTax()">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="isBlind">Legally Blind?</label>
+                <select id="isBlind" onchange="calculateTax()">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="wages">Form 1040, Line 1a (W-2 Wages)</label>
+                <input type="number" id="wages" value="65000" oninput="calculateTax()">
+            </div>
+            <div class="form-group">
+                <label for="withholding">Line 25 (Federal Tax Withheld)</label>
+                <input type="number" id="withholding" value="7000" oninput="calculateTax()">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Schedule B — Interest & Ordinary Dividends</h2>
+            <div class="form-group">
+                <label for="schedB_interest">Line 4 (Taxable Interest)</label>
+                <input type="number" id="schedB_interest" value="250" oninput="calculateTax()">
+            </div>
+            <div class="form-group">
+                <label for="schedB_dividends">Line 6 (Ordinary Dividends)</label>
+                <input type="number" id="schedB_dividends" value="400" oninput="calculateTax()">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Form 8949 & Schedule D — Capital Gains/Losses</h2>
+            <div class="form-group">
+                <label for="f8949_st">Form 8949 Part I Net Short-Term Gain/Loss</label>
+                <input type="number" id="f8949_st" value="1200" oninput="calculateTax()">
+            </div>
+            <div class="form-group">
+                <label for="f8949_lt">Form 8949 Part II Net Long-Term Gain/Loss</label>
+                <input type="number" id="f8949_lt" value="-4500" oninput="calculateTax()">
+            </div>
+            <div class="info-note">*Net losses will automatically be capped dynamically per rules ($3k / $1.5k)</div>
+        </div>
+
+        <div class="form-section">
+            <h2>Form 8606, 8889 & Schedule 1 — Custom Income/Adjustments</h2>
+            <div class="form-group">
+                <label for="f8606_ira">Form 8606 (Taxable Traditional IRA Distributions)</label>
+                <input type="number" id="f8606_ira" value="0" oninput="calculateTax()">
+            </div>
+            <div class="form-group">
+                <label for="sched1_inc">Schedule 1, Part I (Other Income / Business / Rental)</label>
+                <input type="number" id="sched1_inc" value="0" oninput="calculateTax()">
+            </div>
+            <div class="form-group">
+                <label for="f8889_hsa">Form 8889, Line 13 (HSA Deduction Contribution)</label>
+                <input type="number" id="f8889_hsa" value="1500" oninput="calculateTax()">
+            </div>
+            <div class="form-group">
+                <label for="sched1_adj">Schedule 1, Part II (Other Adjustments / Student Loan)</label>
+                <input type="number" id="sched1_adj" value="0" oninput="calculateTax()">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Form 8919 & Schedule 2 — Additional Taxes</h2>
+            <div class="form-group">
+                <label for="f8919_wages">Form 8919, Line 6 (Misclassified FICA Wages)</label>
+                <input type="number" id="f8919_wages" value="0" oninput="calculateTax()">
+            </div>
+            <div class="info-note">*System will auto-assess uncollected 7.65% FICA tax into Schedule 2.</div>
+            <div class="form-group">
+                <label for="sched2_tax">Schedule 2, Part II (Other Taxes / AMT / Self-Employment)</label>
+                <input type="number" id="sched2_tax" value="0" oninput="calculateTax()">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Schedule 3 & Form 8888 — Credits & Allocations</h2>
+            <div class="form-group">
+                <label for="sched3_nonref">Schedule 3, Part I (Nonrefundable Credits)</label>
+                <input type="number" id="sched3_nonref" value="500" oninput="calculateTax()">
+            </div>
+            <div class="form-group">
+                <label for="sched3_ref">Schedule 3, Part II (Refundable Credits)</label>
+                <input type="number" id="sched3_ref" value="0" oninput="calculateTax()">
+            </div>
+            <div class="form-group">
+                <label for="f8888_split">Form 8888 Split Refund Request?</label>
+                <select id="f8888_split">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes (Direct Deposit Split)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-panel">
+        <h2>Live Calculation Metrics</h2>
+        
+        <div class="row-metric">
+            <span>Total Gross Income (Line 9):</span>
+            <span id="out_total_income">$0.00</span>
+        </div>
+        <div class="row-metric">
+            <span>Total Adjustments (Sched 1, Pt II):</span>
+            <span id="out_adjustments">$0.00</span>
+        </div>
+        <div class="row-metric" style="font-weight: bold; color: var(--secondary);">
+            <span>Adjusted Gross Income (AGI):</span>
+            <span id="out_agi">$0.00</span>
+        </div>
+        <div class="row-metric">
+            <span>Standard Deduction Applied:</span>
+            <span id="out_deduction">$0.00</span>
+        </div>
+        <div class="row-metric" style="font-weight: bold;">
+            <span>Taxable Income (Line 15):</span>
+            <span id="out_taxable_income">$0.00</span>
+        </div>
+        
+        <hr style="border-color: #475569; margin: 15px 0;">
+        
+        <div class="row-metric">
+            <span>Regular Bracket Income Tax:</span>
+            <span id="out_base_tax">$0.00</span>
+        </div>
+        <div class="row-metric">
+            <span>Form 8919 + Sched 2 Add'l Tax:</span>
+            <span id="out_add_tax">$0.00</span>
+        </div>
+        <div class="row-metric" style="font-weight: bold;">
+            <span>Total Tax Liability (Line 24):</span>
+            <span id="out_total_tax">$0.00</span>
+        </div>
+        <div class="row-metric">
+            <span>Total Paid (Withholding + Credits):</span>
+            <span id="out_payments">$0.00</span>
+        </div>
+        
+        <div class="row-metric total" id="net_position_wrapper">
+            <span id="net_label">BALANCE DUE:</span>
+            <span id="net_value">$0.00</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateTax() {
+        // --- READ VALUES ---
+        const status = document.getElementById("filingStatus").value;
+        const is65 = parseInt(document.getElementById("is65Plus").value);
+        const isBlind = parseInt(document.getElementById("isBlind").value);
+        
+        const wages = parseFloat(document.getElementById("wages").value) || 0;
+        const withholding = parseFloat(document.getElementById("withholding").value) || 0;
+        
+        const interest = parseFloat(document.getElementById("schedB_interest").value) || 0;
+        const dividends = parseFloat(document.getElementById("schedB_dividends").value) || 0;
+        
+        const stLossGain = parseFloat(document.getElementById("f8949_st").value) || 0;
+        const ltLossGain = parseFloat(document.getElementById("f8949_lt").value) || 0;
+        
+        const iraDist = parseFloat(document.getElementById("f8606_ira").value) || 0;
+        const sched1Inc = parseFloat(document.getElementById("sched1_inc").value) || 0;
+        const hsaDed = parseFloat(document.getElementById("f8889_hsa").value) || 0;
+        const sched1Adj = parseFloat(document.getElementById("sched1_adj").value) || 0;
+        
+        const f8919Wages = parseFloat(document.getElementById("f8919_wages").value) || 0;
+        const sched2Tax = parseFloat(document.getElementById("sched2_tax").value) || 0;
+        
+        const nonRefCred = parseFloat(document.getElementById("sched3_nonref").value) || 0;
+        const refCred = parseFloat(document.getElementById("sched3_ref").value) || 0;
+
+        // --- SCHED D CAPITAL GAIN/LOSS NETTING & CAP ---
+        let netCapital = stLossGain + ltLossGain;
+        if (netCapital < 0) {
+            let capLimit = (status === "MFS") ? 1500 : 3000;
+            netCapital = Math.max(netCapital, -capLimit);
+        }
+
+        // --- LINE 9: TOTAL INCOME ---
+        const totalWages = wages + f8919Wages; 
+        const totalIncome = totalWages + interest + dividends + iraDist + sched1Inc + netCapital;
+
+        // --- LINE 11: ADJUSTED GROSS INCOME (AGI) ---
+        const totalAdjustments = hsaDed + sched1Adj;
+        const agi = Math.max(0, totalIncome - totalAdjustments);
+
+        // --- DEDUCTION GENERATION ---
+        let baseDeduction = 15750;
+        if (status === "MFJ") baseDeduction = 31500;
+        if (status === "MFS") baseDeduction = 15750;
+        if (status === "HoH") baseDeduction = 23625;
+
+        let extraModifier = (status === "Single" || status === "HoH") ? 2000 : 1600;
+        let runningDeduction = baseDeduction + (is65 * extraModifier) + (isBlind * extraModifier);
+
+        // --- LINE 15: TAXABLE INCOME ---
+        const taxableIncome = Math.max(0, agi - runningDeduction);
+
+        // --- BRACKETS (PROGRESSIVE TAX LAYER ENGINE) ---
+        let baseTax = 0;
+        const brackets = {
+            "Single": [[11925, 0.10], [48475, 0.12], [103350, 0.22], [197300, 0.24], [250525, 0.32], [626350, 0.35], [Infinity, 0.37]],
+            "MFJ":    [[23850, 0.10], [96950, 0.12], [206700, 0.22], [394600, 0.24], [501050, 0.32], [751600, 0.35], [Infinity, 0.37]],
+            "MFS":    [[11925, 0.10], [48475, 0.12], [103350, 0.22], [197300, 0.24], [250525, 0.32], [375800, 0.35], [Infinity, 0.37]],
+            "HoH":    [[17000, 0.10], [64850, 0.12], [103350, 0.22], [197300, 0.24], [250500, 0.32], [626350, 0.35], [Infinity, 0.37]]
+        }[status];
+
+        let prevTierLimit = 0;
+        for (let i = 0; i < brackets.length; i++) {
+            let limit = brackets[i][0];
+            let rate = brackets[i][1];
+            if (taxableIncome > limit) {
+                baseTax += (limit - prevTierLimit) * rate;
+                prevTierLimit = limit;
+            } else {
+                baseTax += (taxableIncome - prevTierLimit) * rate;
+                break;
+            }
+        }
+
+        // --- SYSTEM ADDITIONAL TAX (FORM 8919 FICA EMULATION) ---
+        const f8919CalculatedTax = f8919Wages * 0.0765;
+        const compositeAdditionalTax = sched2Tax + f8919CalculatedTax;
+
+        // --- LINE 24: TOTAL TAX LIABILITY ---
+        const rawTaxLiability = baseTax + compositeAdditionalTax;
+        const totalTax = Math.max(0, rawTaxLiability - nonRefCred);
+
+        // --- CREDITS & REMITTANCES BALANCER ---
+        const totalPayments = withholding + refCred;
+        const balanceNet = totalPayments - totalTax;
+
+        // --- RENDER TEXT OUTPUT ELEMENTS ---
+        document.getElementById("out_total_income").innerText = formatCurrency(totalIncome);
+        document.getElementById("out_adjustments").innerText = formatCurrency(totalAdjustments);
+        document.getElementById("out_agi").innerText = formatCurrency(agi);
+        document.getElementById("out_deduction").innerText = formatCurrency(runningDeduction);
+        document.getElementById("out_taxable_income").innerText = formatCurrency(taxableIncome);
+        document.getElementById("out_base_tax").innerText = formatCurrency(baseTax);
+        document.getElementById("out_add_tax").innerText = formatCurrency(compositeAdditionalTax);
+        document.getElementById("out_total_tax").innerText = formatCurrency(totalTax);
+        document.getElementById("out_payments").innerText = formatCurrency(totalPayments);
+
+        const wrap = document.getElementById("net_position_wrapper");
+        const lbl = document.getElementById("net_label");
+        const val = document.getElementById("net_value");
+
+        if (balanceNet >= 0) {
+            lbl.innerText = "🎉 FINAL REFUND DUE:";
+            val.innerText = formatCurrency(balanceNet);
+            wrap.className = "row-metric total status-refund";
+        } else {
+            lbl.innerText = "⚠️ TOTAL AMOUNT OWED:";
+            val.innerText = formatCurrency(Math.abs(balanceNet));
+            wrap.className = "row-metric total status-owed";
+        }
+    }
+
+    function formatCurrency(num) {
+        return "$" + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Initialize execution on runtime startup
+    calculateTax();
+</script>
+</body>
+</html>
